@@ -1,6 +1,7 @@
 import zmq
 import logging
 import json
+import os
 from src.config.settings import settings
 import socket
 
@@ -45,7 +46,9 @@ class ZMQManager:
                 raise
         elif settings.TRUSTED_HOSTS_FILE != "":
             try:
-                with open(settings.TRUSTED_HOSTS_FILE, 'r') as file:
+                config_path = os.path.join(os.path.dirname(__file__), '..', 'config', str(settings.TRUSTED_HOSTS_FILE))
+                config_path = os.path.abspath(config_path)
+                with open(config_path, 'r') as file:
                     trusted_hosts = json.load(file)
                 logger.info(f"Trusted hosts loaded from file.")
                 return trusted_hosts

@@ -2,7 +2,6 @@ import zmq
 import logging
 from src.zmq.manager import ZMQManager
 from src.config.settings import settings
-from src.models.alert_model import AlertModel
 
 logger = logging.getLogger(__name__)
 

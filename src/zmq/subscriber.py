@@ -24,17 +24,26 @@ class ZMQSubscriber(threading.Thread):
     def __init__(self, on_message_callback):
         super().__init__(daemon=True)  # Daemon thread so it closes with main app
         self.context = ZMQManager.get_context()
-        self.subscriber_socket = self.context.socket(zmq.SUB)
+        self.subscriber_socket: zmq.Socket = self.context.socket(zmq.SUB)
         self._topic = settings.ZMQ_TOPIC_FAIL2BAN_ALERT
         self._running = threading.Event()
         self._running.set()
         self._on_message_callback = on_message_callback
 
+    def connect_to_publisher(self, host:str):
+        """Connect to publishers using the trusted hosts."""
+        try:
+            self.subscriber_socket.connect(host)
+            logger.info(f"Subscriber bound to {settings.ZMQ_PUBLISHER_BIND_ADDRESS}")
+        except zmq.ZMQError as e:
+            logger.error(f"Failed to bind subscriber socket: {e}")
+            raise
+
     def connect_to_publishers(self):
         trusted_hosts = ZMQManager.get_trusted_hosts()
         for host in trusted_hosts:
             try:
-                self.subscriber_socket.connect(host)
+                self.connect_to_publisher(host=host)
                 logger.info(f"Connected to publisher: {host}")
             except zmq.ZMQError as e:
                 logger.error(f"Failed to connect to {host}: {e}")
