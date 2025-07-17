@@ -2,11 +2,11 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import zmq
-from src.zmq.publisher import ZMQPublisher
+from src.ids2zmq.publisher import ZMQPublisher
 
 class TestZMQPublisher(unittest.TestCase):
-    @patch('src.zmq.publisher.ZMQManager.get_context')
-    @patch('src.zmq.publisher.settings')
+    @patch('src.ids2zmq.publisher.ZMQManager.get_context')
+    @patch('src.ids2zmq.publisher.settings')
     def setUp(self, mock_settings, mock_get_context):
         self.mock_context = MagicMock()
         self.mock_socket = MagicMock()
@@ -22,13 +22,13 @@ class TestZMQPublisher(unittest.TestCase):
         self.mock_socket.bind.assert_called_once_with("tcp://*:5556")
         self.assertTrue(self.publisher._is_bound)
 
-    @patch('src.zmq.publisher.logger')
+    @patch('src.ids2zmq.publisher.logger')
     def test_bind_already_bound(self, mock_logger):
         self.publisher._is_bound = True
         self.publisher.bind()
         mock_logger.warning.assert_called_once_with("ZMQ Publisher already bound.")
 
-    @patch('src.zmq.publisher.logger')
+    @patch('src.ids2zmq.publisher.logger')
     def test_bind_failure(self, mock_logger):
         self.publisher._is_bound = False
         self.mock_socket.bind.side_effect = zmq.ZMQError("Bind error")
@@ -43,14 +43,14 @@ class TestZMQPublisher(unittest.TestCase):
             [b"fail2ban.alert", b"Test alert"]
         )
 
-    @patch('src.zmq.publisher.logger')
+    @patch('src.ids2zmq.publisher.logger')
     def test_publish_alert_not_bound(self, mock_logger):
         self.publisher._is_bound = False
         with self.assertRaises(RuntimeError):
             self.publisher.publish_alert("Test alert")
         mock_logger.error.assert_called_once_with("Attempted to publish without binding the ZMQ Publisher.")
 
-    @patch('src.zmq.publisher.logger')
+    @patch('src.ids2zmq.publisher.logger')
     def test_publish_alert_zmqerror(self, mock_logger):
         self.publisher._is_bound = True
         self.mock_socket.send_multipart.side_effect = zmq.ZMQError("Send error")
@@ -58,7 +58,7 @@ class TestZMQPublisher(unittest.TestCase):
             self.publisher.publish_alert("Test alert")
         mock_logger.error.assert_called()
 
-    @patch('src.zmq.publisher.logger')
+    @patch('src.ids2zmq.publisher.logger')
     def test_close(self, mock_logger):
         self.publisher._is_bound = True
         self.publisher.close()

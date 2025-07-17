@@ -1,5 +1,5 @@
 from src.models.alert_model import AlertModel
-from src.zmq.publisher import ZMQPublisher
+from src.ids2zmq.publisher import ZMQPublisher
 
 class PublishMsgService:
     def __init__(self, publisher: ZMQPublisher):

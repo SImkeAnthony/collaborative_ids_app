@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 from src.models.alert_model import AlertModel
-from src.zmq.publisher import ZMQPublisher
+from src.ids2zmq.publisher import ZMQPublisher
 from src.services.publish_msg_service import PublishMsgService
 
 class TestPublishMsgService(unittest.TestCase):

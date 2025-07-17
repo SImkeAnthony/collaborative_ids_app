@@ -1,4 +1,4 @@
-# Write a test for subscriber.py from zmq package
+# Write a test for subscriber.py from ids2zmq package
 import unittest
 import zmq
 import unittest.mock
@@ -9,9 +9,9 @@ class TestZMQSubscriber(unittest.TestCase):
         self.mock_socket = unittest.mock.Mock()
         self.mock_context.socket.return_value = self.mock_socket
         self.mock_callback = unittest.mock.Mock()
-        self.patcher_manager = unittest.mock.patch('src.zmq.manager.ZMQManager.get_context',
+        self.patcher_manager = unittest.mock.patch('src.ids2zmq.manager.ZMQManager.get_context',
                                                    return_value=self.mock_context)
-        self.patcher_hosts = unittest.mock.patch('src.zmq.manager.ZMQManager.get_trusted_hosts',
+        self.patcher_hosts = unittest.mock.patch('src.ids2zmq.manager.ZMQManager.get_trusted_hosts',
                                                  return_value=['tcp://localhost:5555'])
         self.patcher_settings = unittest.mock.patch('src.config.settings.settings.ZMQ_TOPIC_FAIL2BAN_ALERT', 'ALERT')
         self.patcher_bind = unittest.mock.patch('src.config.settings.settings.ZMQ_PUBLISHER_BIND_ADDRESS',
@@ -20,7 +20,7 @@ class TestZMQSubscriber(unittest.TestCase):
         self.patcher_hosts.start()
         self.patcher_settings.start()
         self.patcher_bind.start()
-        self.subscriber = __import__('src.zmq.subscriber').zmq.subscriber.ZMQSubscriber(self.mock_callback)
+        self.subscriber = __import__('src.ids2zmq.subscriber').ids2zmq.subscriber.ZMQSubscriber(self.mock_callback)
 
     def tearDown(self):
         self.patcher_manager.stop()

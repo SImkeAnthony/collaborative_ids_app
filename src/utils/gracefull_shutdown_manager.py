@@ -1,5 +1,8 @@
 import signal
+import logging
 from typing import List, Callable
+
+logger = logging.getLogger(__name__)
 
 """
 Use this class to manage graceful shutdowns in your application.
@@ -22,13 +25,13 @@ class GracefulShutdownManager:
         self._cleanup_callbacks.append(cleanup_callable)
 
     def shutdown(self, *args):
-        print("Starting graceful shutdown...")
+        logger.info("Received shutdown signal, starting graceful shutdown...")
         for callback in self._cleanup_callbacks:
             try:
                 callback()
             except Exception as e:
-                print(f"Error while cleaning : {e}")
-        print("Graceful shutdown completed.")
+                logger.error(f"Error during cleanup: {e}")
+        logger.info("All cleanup functions executed successfully.")
         exit(0)
 
     def hook_signals(self):

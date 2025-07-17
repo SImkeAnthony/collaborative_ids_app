@@ -1,6 +1,6 @@
 import zmq
 import logging
-from src.zmq.manager import ZMQManager
+from src.ids2zmq.manager import ZMQManager
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
