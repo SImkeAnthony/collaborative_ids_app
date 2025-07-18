@@ -7,7 +7,7 @@ from src.config.settings import settings
 from src.ids2zmq.manager import ZMQManager
 from src.ids2zmq.publisher import ZMQPublisher
 from src.ids2zmq.subscriber import ZMQSubscriber
-from src.utils.gracefull_shutdown_manager import GracefulShutdownManager
+from src.utils.graceful_shutdown_manager import GracefulShutdownManager
 from src.services.publish_msg_service import PublishMsgService
 from src.services.subscribe_msg_service import SubscribeMsgService
 from src.api.routes import get_routes
@@ -30,13 +30,17 @@ class Main:
 
         # Initialize ZMQ Publisher and Subscriber
         self.publisher = ZMQPublisher()
-        self.publisher.bind()
         self.subscriber_service = SubscribeMsgService()
-        logger.info("ZMQ Publisher bound to address: %s", settings.ZMQ_PUBLISHER_BIND_ADDRESS)
         self.subscriber = ZMQSubscriber(on_message_callback=self.subscriber_service.process_received_message)
-        self.subscriber.configure_security()
+
+        # Initialize ZMQ context and security if enabled
+        if ZMQManager.zmq_security_enabled:
+            ZMQManager.generate_symmetrical_key(filename=settings.ZMQ_SYMMETRICAL_KEY_FILE)
+            self.publisher.configure_security()
+            self.subscriber.configure_security()
+
+        self.publisher.bind()
         self.subscriber.connect_to_publishers()
-        logger.info("ZMQ Subscriber connected to publishers.")
 
         # Register shutdown handlers
         self.shutdown_manager.register(self.publisher.close)

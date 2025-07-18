@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     ZMQ_CERTS_PATH: str = "certs/"
     ZMQ_CERTS_NAME: str = "local"
     ZMQ_TRUSTED_PEERS_CERTS_PATH: str = "certs/authorized_clients/"
+    ZMQ_SYMMETRICAL_KEY_FILE: str = "symmetric_key.key"
     TRUSTED_HOSTS_FILE: str = "trustedHost.json"
     TRUSTED_HOSTS: str = ""
-
 
 settings = Settings()

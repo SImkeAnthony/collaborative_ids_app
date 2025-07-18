@@ -3,6 +3,7 @@ import logging
 import json
 import os
 
+from fernet import Fernet
 from zmq.auth.thread import ThreadAuthenticator
 
 from src.config.settings import settings
@@ -93,9 +94,9 @@ class ZMQManager:
     @classmethod
     def generate_key(cls, filename: str = "default_key") -> tuple[bytes, bytes]:
         """Generate and store a key in the keys' manager."""
-        if os.path.exists(settings.ZMQ_CERTS_PATH+ filename + ".key_secret"):
+        if os.path.exists(settings.ZMQ_CERTS_PATH + filename + ".key_secret"):
             logger.info("ZMQ key pair already exists, loading from file.")
-            pub, private = cls.zmq_security.load_certificate(filename=settings.ZMQ_CERTS_PATH + filename)
+            pub, private = cls.zmq_security.load_certificate(filename=settings.ZMQ_CERTS_PATH + filename + ".key_secret")
         else :
             pub, private = cls.zmq_security.generate_key(filename=filename)
             logger.info("Generated new ZMQ key pair.")
@@ -108,4 +109,25 @@ class ZMQManager:
             logger.error(f"Certificate file {filename} does not exist.")
             raise FileNotFoundError(f"Certificate file {filename} does not exist.")
         return cls.zmq_security.load_certificate(filename=settings.ZMQ_CERTS_PATH + filename)
+
+    @classmethod
+    def generate_symmetrical_key(cls, filename: str = "default_symmetric_key.key") -> bytes:
+        """Generate and store a symmetric key for low encryption."""
+        if os.path.exists(settings.ZMQ_CERTS_PATH + filename):
+            logger.info("Symmetric key already exists, loading from file.")
+            return cls.load_symmetrical_key(filename=filename)
+        else:
+            key = cls.zmq_security.generate_symmetrical_key(filename=filename)
+            logger.info("Generated new symmetric key.")
+            return key
+
+    @classmethod
+    def load_symmetrical_key(cls, filename: str = "default_symmetric_key.key") -> bytes:
+        """Load the symmetric key from a file."""
+        if not os.path.exists(settings.ZMQ_CERTS_PATH + filename):
+            logger.error(f"Symmetric key file {filename} does not exist.")
+            raise FileNotFoundError(f"Symmetric key file {filename} does not exist.")
+        key = cls.zmq_security.load_symmetrical_key(filename=settings.ZMQ_CERTS_PATH + filename)
+        logger.info("Loaded symmetric key successfully.")
+        return key
 
