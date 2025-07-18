@@ -19,8 +19,10 @@ class Settings(BaseSettings):
 
     # ZMQ configuration
     ENABLE_ZMQ_SECURITY: bool = True
+    ZMQ_SECURITY_USERNAME: str = "zmq_user"
+    ZMQ_SECURITY_PASSWORD: str = "zmq_password"
     ZMQ_CERTS_PATH: str = "certs/"
-    ZMQ_CERTS_NAME: str = "localhost"
+    ZMQ_CERTS_NAME: str = "local"
     ZMQ_TRUSTED_PEERS_CERTS_PATH: str = "certs/authorized_clients/"
     TRUSTED_HOSTS_FILE: str = "trustedHost.json"
     TRUSTED_HOSTS: str = ""

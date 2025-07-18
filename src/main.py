@@ -34,12 +34,14 @@ class Main:
         self.subscriber_service = SubscribeMsgService()
         logger.info("ZMQ Publisher bound to address: %s", settings.ZMQ_PUBLISHER_BIND_ADDRESS)
         self.subscriber = ZMQSubscriber(on_message_callback=self.subscriber_service.process_received_message)
+        self.subscriber.configure_security()
         self.subscriber.connect_to_publishers()
         logger.info("ZMQ Subscriber connected to publishers.")
 
         # Register shutdown handlers
         self.shutdown_manager.register(self.publisher.close)
         self.shutdown_manager.register(self.subscriber.stop)
+        self.shutdown_manager.register(ZMQManager.stop_authenticator)
         self.shutdown_manager.register(ZMQManager.terminate_context)
         logger.info("ZMQ components initialized and shutdown handlers registered.")
 

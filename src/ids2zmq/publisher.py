@@ -15,7 +15,17 @@ class ZMQPublisher:
         self._is_bound = False
 
     def bind(self):
-        """Bind the ZMQ Publisher to the configured address."""
+        """Bind the ZMQ Publisher to the configured address. And security settings."""
+        if ZMQManager.zmq_security_enabled:
+            try:
+                self.publisher_socket.setsockopt(zmq.PLAIN_SERVER, 1)
+                logger.info("ZMQ plain security enabled for publisher socket.")
+                ZMQManager.enable_plain_auth(context=ZMQManager.get_context())
+            except zmq.ZMQError as e:
+                logger.error(f"Failed to enable ZMQ plain security for publisher: {e}")
+                raise
+        else:
+            logger.info("ZMQ plain security not enabled for publisher socket.")
         if not self._is_bound:
             try:
                 self.publisher_socket.bind(self._bind_address)

@@ -2,6 +2,9 @@ import zmq
 import logging
 import json
 import os
+
+from zmq.auth.thread import ThreadAuthenticator
+
 from src.config.settings import settings
 from src.utils.keysManager import KeysManager
 from src.ids2zmq.security import ZMQSecurity
@@ -12,6 +15,7 @@ class ZMQManager:
     """Manage the ZeroMQ context for the application."""
     _context: zmq.Context = None
     _keys_manager: KeysManager = KeysManager()
+    _authenticator: ThreadAuthenticator = None
     zmq_security_enabled: bool = settings.ENABLE_ZMQ_SECURITY
     zmq_security: ZMQSecurity = ZMQSecurity()
 
@@ -61,6 +65,30 @@ class ZMQManager:
                 raise
         logger.error("No trusted hosts configured.")
         raise ValueError("No trusted hosts configured in settings.")
+
+    @classmethod
+    def enable_plain_auth(cls, context: zmq.Context) -> ThreadAuthenticator:
+        if not cls.zmq_security_enabled:
+            logger.warning("ZMQ security is not enabled, skipping PLAIN authentication setup.")
+            return None
+        try:
+            cls._authenticator = ThreadAuthenticator(context)
+            cls._authenticator.start()
+            cls._authenticator.configure_plain(domain='*', passwords={
+                settings.ZMQ_SECURITY_USERNAME: settings.ZMQ_SECURITY_PASSWORD,
+            })
+            logger.info("PLAIN authentication server enabled.")
+            return cls._authenticator
+        except Exception as e:
+            logger.error(f"Error enabling PLAIN authentication server: {e}")
+            raise
+
+    @classmethod
+    def stop_authenticator(cls):
+        if cls._authenticator:
+            cls._authenticator.stop()
+            logger.info("ZMQ PLAIN authenticator stopped.")
+            cls._authenticator = None
 
     @classmethod
     def generate_key(cls, filename: str = "default_key") -> tuple[bytes, bytes]:

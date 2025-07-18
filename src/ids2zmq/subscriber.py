@@ -50,6 +50,19 @@ class ZMQSubscriber(threading.Thread):
 
         self.subscriber_socket.setsockopt_string(zmq.SUBSCRIBE, self._topic)
 
+    def configure_security(self):
+        """Configure security settings for the subscriber socket if enabled."""
+        if ZMQManager.zmq_security_enabled:
+            try :
+                self.subscriber_socket.setsockopt(zmq.PLAIN_USERNAME, settings.ZMQ_SECURITY_USERNAME.encode('utf-8'))
+                self.subscriber_socket.setsockopt(zmq.PLAIN_PASSWORD, settings.ZMQ_SECURITY_PASSWORD.encode('utf-8'))
+                logger.info("ZMQ plain security enabled for subscriber socket.")
+            except zmq.ZMQError as e:
+                logger.error(f"Failed to enable ZMQ plain security for subscriber: {e}")
+                raise
+        else:
+            logger.info("ZMQ plain security not enabled for subscriber socket.")
+
     def run(self):
         logger.info("ZMQSubscriber started.")
         while self._running.is_set():
