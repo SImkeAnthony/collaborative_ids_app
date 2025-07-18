@@ -59,15 +59,6 @@ class Main:
         except Exception as e:
             logger.error(f"Error starting subscriber: {e}")
             self.shutdown_manager.shutdown()
-        time.sleep(3.0)
-        # testing : send three messages
-        try:
-            self.publisher.publish_alert(alert="Test Alert 1")
-            self.publisher.publish_alert(alert="Test Alert 2")
-            self.publisher.publish_alert(alert="Test Alert 3")
-        except Exception as e:
-            logger.error(f"Error publishing test messages: {e}")
-            self.shutdown_manager.shutdown()
         try:
             uvicorn.run(self.app, host=settings.API_HOST, port=settings.API_PORT, log_level=settings.LOG_LEVEL.lower())
             logger.info(f"FastAPI app running at {settings.API_HOST}:{settings.API_PORT}")

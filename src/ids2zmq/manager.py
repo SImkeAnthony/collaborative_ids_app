@@ -3,13 +3,17 @@ import logging
 import json
 import os
 from src.config.settings import settings
-import socket
+from src.utils.keysManager import KeysManager
+from src.ids2zmq.security import ZMQSecurity
 
 logger = logging.getLogger(__name__)
 
 class ZMQManager:
     """Manage the ZeroMQ context for the application."""
     _context: zmq.Context = None
+    _keys_manager: KeysManager = KeysManager()
+    zmq_security_enabled: bool = settings.ENABLE_ZMQ_SECURITY
+    zmq_security: ZMQSecurity = ZMQSecurity()
 
     @classmethod
     def get_context(cls) -> zmq.Context:
@@ -57,3 +61,23 @@ class ZMQManager:
                 raise
         logger.error("No trusted hosts configured.")
         raise ValueError("No trusted hosts configured in settings.")
+
+    @classmethod
+    def generate_key(cls, filename: str = "default_key") -> tuple[bytes, bytes]:
+        """Generate and store a key in the keys' manager."""
+        if os.path.exists(settings.ZMQ_CERTS_PATH+ filename + ".key_secret"):
+            logger.info("ZMQ key pair already exists, loading from file.")
+            pub, private = cls.zmq_security.load_certificate(filename=settings.ZMQ_CERTS_PATH + filename)
+        else :
+            pub, private = cls.zmq_security.generate_key(filename=filename)
+            logger.info("Generated new ZMQ key pair.")
+        return pub, private
+
+    @classmethod
+    def load_certificate(cls, filename: str) -> tuple[bytes, bytes]:
+        """Load a ZMQ certificate from a file."""
+        if not os.path.exists(settings.ZMQ_CERTS_PATH + filename + ".key_secret"):
+            logger.error(f"Certificate file {filename} does not exist.")
+            raise FileNotFoundError(f"Certificate file {filename} does not exist.")
+        return cls.zmq_security.load_certificate(filename=settings.ZMQ_CERTS_PATH + filename)
+
