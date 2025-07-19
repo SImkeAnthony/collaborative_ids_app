@@ -1,6 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, IPvAnyAddress, field_validator
 from typing import Optional
 from datetime import datetime, UTC
+from src.fail2ban.jail import get_active_jails
+from src.fail2ban.action import Fail2banAction
 
 class AlertModel(BaseModel):
     """
@@ -25,8 +27,21 @@ class AlertModel(BaseModel):
     protocol: Optional[str] = "tcp"
     alert_type: str = "network"
     severity: str = "medium"
-    action: str = "ban"
+    action: Fail2banAction = "banip"
     jail: str = "sshd"
-    ip: str = ""
+    ip: Optional[IPvAnyAddress] = None
     reason: str = ""
     timestamp: datetime = datetime.now(UTC)
+
+    @field_validator("jail")
+    def validate_jail(cls, v):
+        if v not in get_active_jails():
+            raise ValueError(f"Jail is not authorized : {v}")
+        return v
+
+    @field_validator("ip")
+    def validate_ip_for_action(cls, v, values):
+        action = values.data.get("action")
+        if action in {Fail2banAction.BAN, Fail2banAction.UNBAN} and v is None:
+            raise ValueError("A valid IP address is required for ban/unban actions.")
+        return v
