@@ -9,7 +9,20 @@ from src.config.settings import settings
 logger = logging.getLogger(__name__)
 
 class ZMQPublisher:
-    """Manage the ZMQ message publishing for Fail2Ban alerts."""
+    """
+    Manage the ZMQ message publishing for Fail2Ban alerts.
+    Attributes:
+        publisher_socket (zmq.Socket): ZMQ socket for publishing messages.
+        _bind_address (str): Address to bind the publisher socket.
+        _topic (str): Topic for Fail2Ban alerts.
+        _is_bound (bool): Flag indicating if the publisher is bound.
+        _fernet (Fernet): Fernet instance for encrypting messages if security is enabled.
+    Methods:
+        configure_security(): Configure security settings for the publisher socket.
+        bind(): Bind the ZMQ Publisher to the configured address.
+        publish_alert(alert: str): Publish a Fail2Ban alert to the ZMQ topic.
+        close(): Close the ZMQ Publisher socket.
+    """
     def __init__(self):
         self.context = ZMQManager.get_context()
         self.publisher_socket: zmq.Socket = self.context.socket(zmq.PUB)
@@ -19,7 +32,11 @@ class ZMQPublisher:
         self._fernet: Fernet = None
 
     def configure_security(self):
-        """Configure security settings for the publisher socket if enabled."""
+        """
+        Configure security settings for the publisher socket if enabled.
+        Raises:
+            RuntimeError: If there is an error configuring ZMQ security.
+        """
         if ZMQManager.zmq_security_enabled:
             try:
                 self.publisher_socket.setsockopt(zmq.PLAIN_SERVER, 1)
@@ -36,7 +53,11 @@ class ZMQPublisher:
             logger.info("ZMQ plain security not enabled for publisher socket.")
 
     def bind(self):
-        """Bind the ZMQ Publisher to the configured address."""
+        """
+        Bind the ZMQ Publisher to the configured address.
+        Raises:
+            RuntimeError: If the publisher is already bound or if binding fails.
+        """
         if not self._is_bound:
             try:
                 self.publisher_socket.bind(self._bind_address)
@@ -49,7 +70,13 @@ class ZMQPublisher:
             logger.warning("ZMQ Publisher already bound.")
 
     def publish_alert(self, alert: str):
-        """Publish a Fail2Ban alert to the ZMQ topic."""
+        """
+        Publish a Fail2Ban alert to the ZMQ topic.
+        Args:
+            alert (str): The alert message to publish.
+        Raises:
+            RuntimeError: If the publisher is not bound or if there is an error during publishing.
+        """
         if not self._is_bound:
             logger.error("Attempted to publish without binding the ZMQ Publisher.")
             raise RuntimeError("ZMQ Publisher not bound.")

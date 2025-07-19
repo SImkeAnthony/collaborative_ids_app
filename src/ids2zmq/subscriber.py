@@ -4,7 +4,6 @@ import zmq
 import threading
 import logging
 from cryptography.fernet import Fernet
-from typing_extensions import override
 
 from src.ids2zmq.manager import ZMQManager
 from src.config.settings import settings
@@ -24,7 +23,24 @@ subscriber.start()
 """
 
 class ZMQSubscriber(threading.Thread):
-    """Subscriber in a separate thread to listen for ZMQ messages."""
+    """
+    Subscriber in a separate thread to listen for ZMQ messages.
+    Args:
+        on_message_callback (callable): Function to call when a message is received.
+    Attributes:
+        on_message_callback (callable): Function to call when a message is received.
+        subscriber_socket (zmq.Socket): ZMQ socket for subscribing to messages.
+        _topic (str): Topic to subscribe to.
+        _running (threading.Event): Event to control the running state of the thread.
+        _fernet (Fernet): Fernet instance for decrypting messages if security is enabled.
+    Methods:
+        connect_to_publisher(host: str): Connect to a specific publisher.
+        connect_to_publisher_with_retries(host: str, retries: int = 5, delay: float = 2.0): Connect to a publisher with retry logic.
+        connect_to_publishers(): Connect to all trusted publishers defined in the ZMQManager.
+        configure_security(): Configure security settings for the subscriber socket if enabled.
+        run(): Run the subscriber thread to listen for messages.
+        stop(): Stop the subscriber thread and close the socket.
+    """
 
     def __init__(self, on_message_callback):
         super().__init__(daemon=True)  # Daemon thread so it closes with main app
@@ -37,7 +53,13 @@ class ZMQSubscriber(threading.Thread):
         self._fernet: Fernet = None
 
     def connect_to_publisher(self, host:str):
-        """Connect to publishers using the trusted hosts."""
+        """
+        Connect to publishers using the trusted hosts.
+        Args:
+            host (str): Publisher address to connect to.
+        Raises:
+            zmq.ZMQError: If the connection fails.
+        """
         try:
             self.subscriber_socket.connect(host)
             logger.info(f"Subscriber bound to {settings.ZMQ_PUBLISHER_BIND_ADDRESS}")
@@ -52,6 +74,8 @@ class ZMQSubscriber(threading.Thread):
             host (str): Publisher address.
             retries (int): Number of connection attempts.
             delay (float): Seconds to wait between attempts.
+        Raises:
+            zmq.ZMQError: If the connection fails after all retries.
         """
         attempt = 0
         while attempt < retries:
@@ -69,6 +93,11 @@ class ZMQSubscriber(threading.Thread):
                     raise
 
     def connect_to_publishers(self):
+        """
+        Connect to all trusted publishers defined in the ZMQManager.
+        Raises:
+            zmq.ZMQError: If the connection to any publisher fails.
+        """
         trusted_hosts = ZMQManager.get_trusted_hosts()
         for host in trusted_hosts:
             try:
@@ -80,7 +109,12 @@ class ZMQSubscriber(threading.Thread):
         self.subscriber_socket.setsockopt_string(zmq.SUBSCRIBE, self._topic)
 
     def configure_security(self):
-        """Configure security settings for the subscriber socket if enabled."""
+        """
+        Configure security settings for the subscriber socket if enabled.
+        Raises:
+            RuntimeError: If there is an error configuring ZMQ security.
+            zmq.ZMQError: If setting socket options fails.
+        """
         if ZMQManager.zmq_security_enabled:
             try :
                 self.subscriber_socket.setsockopt(zmq.PLAIN_USERNAME, settings.ZMQ_SECURITY_USERNAME.encode('utf-8'))
@@ -97,7 +131,12 @@ class ZMQSubscriber(threading.Thread):
             logger.info("ZMQ plain security not enabled for subscriber socket.")
 
     def run(self):
-        """Run the subscriber thread to listen for messages."""
+        """
+        Run the subscriber thread to listen for messages.
+        Raises:
+            zmq.Again: If no message is available (non-blocking mode).
+            Exception: For any other errors during message processing.
+        """
         logger.info("ZMQSubscriber started.")
         received_msg:str = ""
         while self._running.is_set():
@@ -118,6 +157,9 @@ class ZMQSubscriber(threading.Thread):
                 logger.error(f"Error in ZMQSubscriber: {e}")
 
     def stop(self):
+        """
+        Stop the subscriber thread and close the socket.
+        """
         self._running.clear()
         self.subscriber_socket.close()
         logger.info("ZMQSubscriber stopped.")
