@@ -23,7 +23,7 @@ class Fail2banClient:
         Returns:
             bool: True if the action was successfully executed, False otherwise.
         """
-        cmd = ["fail2ban-client", "set", jail, action, ip]
+        cmd = ["fail2ban-client", "set", jail, action]
         if ip:
             cmd.append(ip)
 

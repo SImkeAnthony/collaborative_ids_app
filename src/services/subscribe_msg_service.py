@@ -2,7 +2,6 @@ import json
 import logging
 from src.models.alert_model import AlertModel
 from src.fail2ban.fail2ban_client import Fail2banClient
-from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 

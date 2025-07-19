@@ -1,36 +1,60 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
 from src.services.subscribe_msg_service import SubscribeMsgService
 
+
 class TestSubscribeMsgService(unittest.TestCase):
-    @patch('src.services.subscribe_msg_service.AlertModel')
-    @patch('builtins.print')
-    def test_process_received_message_valid(self, mock_print, mock_alert_model):
-        message = '{"field1": "value1", "field2": "value2"}'
-        mock_alert_instance = MagicMock()
-        mock_alert_model.return_value = mock_alert_instance
+    def setUp(self):
+        self.service = SubscribeMsgService()
 
-        SubscribeMsgService.process_received_message(message)
+    @patch("src.services.subscribe_msg_service.Fail2banClient.execute_action")
+    def test_process_valid_message_successful_ban(self, mock_execute):
+        mock_execute.return_value = True
 
-        mock_alert_model.assert_called_once_with(field1="value1", field2="value2")
-        mock_print.assert_called_with(f"Alert received : {mock_alert_instance}")
+        message = '{"action": "ban", "jail": "ssh", "ip": "192.168.1.1", "source_ip": "192.168.1.1"}'
 
-    @patch('builtins.print')
-    def test_process_received_message_invalid_json(self, mock_print):
-        message = '{"field1": "value1", "field2": value2}'  # invalid JSON
+        result = self.service.process_received_message(message)
 
-        SubscribeMsgService.process_received_message(message)
+        mock_execute.assert_called_once_with(action="ban", jail="ssh", ip="192.168.1.1")
+        self.assertTrue(result)
 
-        self.assertTrue(any("Error for parsing message" in args[0] for args, _ in mock_print.call_args_list))
+    @patch("src.services.subscribe_msg_service.Fail2banClient.execute_action")
+    def test_process_valid_message_failed_ban(self, mock_execute):
+        mock_execute.return_value = False
 
-    @patch('src.services.subscribe_msg_service.AlertModel', side_effect=Exception("init error"))
-    @patch('builtins.print')
-    def test_process_received_message_alertModel_exception(self, mock_print, mock_alert_model):
-        message = '{"field1": "value1", "field2": "value2"}'
+        message = '{"action": "ban", "jail": "ssh", "ip": "192.168.1.1", "source_ip": "192.168.1.1"}'
 
-        SubscribeMsgService.process_received_message(message)
+        result = self.service.process_received_message(message)
 
-        self.assertTrue(any("Error for parsing message" in args[0] for args, _ in mock_print.call_args_list))
+        mock_execute.assert_called_once_with(action="ban", jail="ssh", ip="192.168.1.1")
+        self.assertFalse(result)
+
+    def test_process_invalid_json_message(self):
+        # Invalid JSON
+        message = 'not-a-valid-json'
+
+        result = self.service.process_received_message(message)
+
+        self.assertFalse(result)
+
+    def test_process_invalid_model_missing_field(self):
+        # Missing source_ip -> should raise validation error
+        message = '{"action": "ban", "jail": "ssh", "ip": "192.168.1.1"}'
+
+        result = self.service.process_received_message(message)
+
+        self.assertFalse(result)
+
+    @patch("src.services.subscribe_msg_service.Fail2banClient.execute_action", side_effect=Exception("boom"))
+    def test_execute_action_raises_exception(self, mock_execute):
+        # Mock complete alert, but Fail2ban fails internally
+        message = '{"action": "ban", "jail": "ssh", "ip": "192.168.1.1", "source_ip": "192.168.1.1"}'
+
+        result = self.service.process_received_message(message)
+
+        mock_execute.assert_called_once()
+        self.assertFalse(result)
 
 if __name__ == "__main__":
     unittest.main()
