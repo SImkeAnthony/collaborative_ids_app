@@ -4,8 +4,12 @@ curl -X POST http://localhost:8000/alert \
   -d '{
     "source_ip": "192.168.0.1",
     "target_ip": "192.168.0.2",
-    "service": "sshd",
-    "timestamp": "2025-07-09T14:00:00Z",
-    "reason": "Multiple failed login attempts",
-    "level": "CRITICAL"
+    "port": 22,
+    "protocol": "ssh",
+    "alert_type": "ssh_brute_force",
+    "severity": "high",
+    "jail": "sshd",
+    "action": "banip",
+    "ip": "124.56.63.32",
+    "reason": "Multiple failed login attempts"
   }'

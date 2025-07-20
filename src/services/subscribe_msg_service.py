@@ -36,7 +36,7 @@ class SubscribeMsgService:
             success = self._fail2ban_client.execute_action(
                 action=alert.action,
                 jail=alert.jail,
-                ip=alert.ip
+                ip=str(alert.ip)
             )
 
             if success:

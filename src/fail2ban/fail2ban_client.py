@@ -35,7 +35,7 @@ class Fail2banClient:
                 logger.debug(result.stdout)
                 return True
             else:
-                logger.error(f"Error executing action '{action}' on jail '{jail}' for IP: {ip or 'N/A'}")
+                logger.error(f"Error executing action '{action}' on jail '{jail}' for IP: {ip or 'N/A'} because: {result.stderr.strip()}")
                 return False
 
         except Exception as e:

@@ -24,11 +24,11 @@ class AlertModel(BaseModel):
     source_ip: str
     target_ip: Optional[str] = None
     port: Optional[int] = None
-    protocol: Optional[str] = "tcp"
-    alert_type: str = "network"
+    protocol: Optional[str] = "ssh"
+    alert_type: str = "ssh_brute_force"
     severity: str = "medium"
-    action: Fail2banAction = "banip"
     jail: str = "sshd"
+    action: Fail2banAction = "banip"
     ip: Optional[IPvAnyAddress] = None
     reason: str = ""
     timestamp: datetime = datetime.now(UTC)
