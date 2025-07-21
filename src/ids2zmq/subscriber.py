@@ -7,6 +7,8 @@ from cryptography.fernet import Fernet
 
 from src.ids2zmq.manager import ZMQManager
 from src.config.settings import settings
+from src.models.alert_model import AlertModel
+from src.utils.ip_address import get_local_ip
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ class ZMQSubscriber(threading.Thread):
         stop(): Stop the subscriber thread and close the socket.
     """
 
-    def __init__(self, on_message_callback):
+    def __init__(self, on_message_callback: callable):
         super().__init__(daemon=True)  # Daemon thread so it closes with main app
         self.context = ZMQManager.get_context()
         self.subscriber_socket: zmq.Socket = self.context.socket(zmq.SUB)
@@ -149,6 +151,8 @@ class ZMQSubscriber(threading.Thread):
                     received_msg = message.decode('utf-8')
                     logger.info("Received message without encryption.")
                 if topic.decode() == self._topic:
+                    alert_received: AlertModel = AlertModel.from_json(json_str=received_msg)
+                    alert_received.target_ip = get_local_ip()
                     logger.info(f"Received alert: {received_msg}")
                     self._on_message_callback(received_msg)
             except zmq.Again:

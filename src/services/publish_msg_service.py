@@ -1,4 +1,7 @@
 from datetime import datetime
+
+from pydantic import IPvAnyAddress
+
 from src.models.alert_model import AlertModel
 from src.ids2zmq.publisher import ZMQPublisher
 
@@ -17,5 +20,6 @@ class PublishMsgService:
 
     def publish_alert(self, alert: AlertModel):
         alert.timestamp = datetime.now()
-        payload = alert.model_dump_json()
+        alert.target_ip = IPvAnyAddress("0.0.0.0") if alert.target_ip is None else alert.target_ip
+        payload = alert.to_json()
         self.publisher.publish_alert(alert=payload)
