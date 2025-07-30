@@ -9,6 +9,7 @@ from src.ids2zmq.manager import ZMQManager
 from src.config.settings import settings
 from src.models.alert_model import AlertModel
 from src.utils.ip_address import get_local_ip
+from src.utils.ip_address import extract_ip_address_from_socket_address
 
 logger = logging.getLogger(__name__)
 
@@ -101,13 +102,18 @@ class ZMQSubscriber(threading.Thread):
             zmq.ZMQError: If the connection to any publisher fails.
         """
         trusted_hosts = ZMQManager.get_trusted_hosts()
+        count = 0
         for host in trusted_hosts:
             try:
-                self.connect_to_publisher_with_retries(host=host)
-
+                if extract_ip_address_from_socket_address(socket_address=host) == get_local_ip():
+                    logger.info(f"Skipping connection to self: {host}")
+                    continue
+                else:
+                    self.connect_to_publisher_with_retries(host=host)
+                    count += 1
             except zmq.ZMQError as e:
                 logger.error(f"Failed to connect to {host}: {e}")
-        logger.info(f"Connected to {len(trusted_hosts)} trusted hosts for ZMQ subscriber.")
+        logger.info(f"Connected to {count} trusted hosts for ZMQ subscriber.")
         self.subscriber_socket.setsockopt_string(zmq.SUBSCRIBE, self._topic)
 
     def configure_security(self):
