@@ -34,9 +34,9 @@ class Settings(BaseSettings):
 
     API_HOST: str = "localhost"
     API_PORT: int = 8000
-    ZMQ_PUBLISHER_BIND_ADDRESS: str = "tcp://localhost:5556"
+    ZMQ_PUBLISHER_BIND_ADDRESS: str = "tcp://0.0.0.0:5556"
     ZMQ_TOPIC_FAIL2BAN_ALERT: str = "FAIL2BAN.ALERT"
-    ZMQ_ROUTER_BIND_ADDRESS: str = "tcp://localhost:5555"
+    ZMQ_ROUTER_BIND_ADDRESS: str = "tcp://0.0.0.0:5555"
 
     API_KEY: str = "YOUR_SECRET_API_KEY"
 
