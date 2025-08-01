@@ -1,6 +1,9 @@
 from fastapi import APIRouter, status
 from src.models.alert_model import AlertModel
 from src.services.publish_msg_service import PublishMsgService
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_routes(publisher_service: PublishMsgService):
     """
@@ -21,7 +24,13 @@ def get_routes(publisher_service: PublishMsgService):
         Returns:
             dict: A response indicating the status of the alert publication.
         """
-        publisher_service.publish_alert(alert)
-        return {"status": "alert published"}
+        try:
+            logger.info(f"POST /alert called with alert: {alert}")
+            publisher_service.publish_alert(alert)
+            return {"status": "alert published"}
+        except Exception as e:
+            logger.error(f"POST /alert failed: {e}")
+            # return the error response
+            return {"status": "error", "message": str(e)}, status.HTTP_500_INTERNAL_SERVER_ERROR
 
     return router

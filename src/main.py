@@ -11,6 +11,8 @@ from src.utils.graceful_shutdown_manager import GracefulShutdownManager
 from src.services.publish_msg_service import PublishMsgService
 from src.services.subscribe_msg_service import SubscribeMsgService
 from src.api.routes import get_routes
+from src.api.middleware import ExceptionHandlingMiddleware
+from src.api.handler import register_exception_handlers
 from src.utils.logger import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,10 @@ class Main:
         publish_service = PublishMsgService(self.publisher)
         self.app.include_router(get_routes(publish_service))
         logger.info("API routes registered.")
+        self.app.add_middleware(ExceptionHandlingMiddleware)
+        logger.info("Middleware added.")
+        register_exception_handlers(app=self.app)
+        logger.info("Exception handlers registered.")
 
     def run(self):
         """
