@@ -4,6 +4,7 @@ import zmq
 import threading
 import logging
 from cryptography.fernet import Fernet
+import cryptography.exceptions as cry_ex
 
 from src.ids2zmq.manager import ZMQManager
 from src.config.settings import settings
@@ -151,8 +152,21 @@ class ZMQSubscriber(threading.Thread):
             try:
                 topic, message = self.subscriber_socket.recv_multipart(flags=zmq.NOBLOCK)
                 if ZMQManager.zmq_security_enabled:
-                    received_msg = self._fernet.decrypt(message).decode('utf-8')
-                    logger.info("Received encrypted message, decrypted successfully.")
+                    try:
+                        received_msg = self._fernet.decrypt(message).decode('utf-8')
+                        logger.info("Received encrypted message, decrypted successfully.")
+                    except cry_ex.InvalidKey as e:
+                        logger.error(f"Failed to decrypt message, invalid key: {e}")
+                        continue
+                    except cry_ex.InvalidSignature as e:
+                        logger.error(f"Failed to decrypt message, invalid signature: {e}")
+                        continue
+                    except cry_ex.UnsupportedAlgorithm as e:
+                        logger.error(f"Failed to decrypt message, unsupported algorithm: {e}")
+                        continue
+                    except Exception as e:
+                        logger.error(f"Error decrypting message: {e}")
+                        continue
                 else:
                     received_msg = message.decode('utf-8')
                     logger.info("Received message without encryption.")
