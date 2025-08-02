@@ -2,6 +2,7 @@ import json
 import logging
 from src.models.alert_model import AlertModel
 from src.fail2ban.fail2ban_client import Fail2banClient
+from src.shared.custom_cache import register_alert
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,10 @@ class SubscribeMsgService:
 
             logger.info(f"Received alert: {alert}")
 
+            # Register the alert in the custom cache
+            register_alert(ip=alert.ip, action=alert.action, jail=alert.jail)
+            logger.info(f"Alert registered in cache: {alert.ip}, {alert.action}, {alert.jail}")
+
             # Perform the ban action using Fail2banClient
             success = self._fail2ban_client.execute_action(
                 action=alert.action,
@@ -40,10 +45,10 @@ class SubscribeMsgService:
             )
 
             if success:
-                logger.info(f"Ban successful for IP: {alert.ip}")
+                logger.info(f"{alert.action} successful for IP: {alert.ip}")
                 return success
             else:
-                logger.warning(f"Failed to ban IP: {alert.ip}")
+                logger.warning(f"Failed to {alert.action} IP: {alert.ip}")
                 return success
 
         except Exception as e:
