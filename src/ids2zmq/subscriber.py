@@ -174,9 +174,10 @@ class ZMQSubscriber(threading.Thread):
                 if topic.decode() == self._topic:
                     alert_received: AlertModel = AlertModel.from_json(json_str=received_msg)
                     alert_received.target_ip = get_local_ip()
-                    alert_received.timestamp = datetime.now(UTC)
-                    logger.info(f"Received alert: {received_msg}")
-                    self._on_message_callback(received_msg)
+                    alert_received.processing_timestamp = datetime.now(UTC)
+                    payload = alert_received.to_json()
+                    logger.info(f"Received alert: {payload}")
+                    self._on_message_callback(payload)
             except zmq.Again:
                 continue  # No message available yet, just retry
             except Exception as e:

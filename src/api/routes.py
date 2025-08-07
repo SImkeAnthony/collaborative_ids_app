@@ -3,6 +3,7 @@ from src.models.alert_model import AlertModel
 from src.services.publish_msg_service import PublishMsgService
 from src.shared.custom_cache import is_duplicate
 import logging
+from datetime import datetime, UTC
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ def get_routes(publisher_service: PublishMsgService):
             dict: A response indicating the status of the alert publication.
         """
         try:
+            alert.processing_timestamp = datetime.now(UTC)
             if is_duplicate(ip=alert.ip, action=alert.action, jail=alert.jail):
                 # If the alert is a duplicate, log it and return a response
                 logger.info(f"HTTP STATUS 208 - Duplicate alert detected: {alert}")

@@ -31,7 +31,7 @@ class SubscribeMsgService:
         try:
             alert_data = json.loads(message)
             alert = AlertModel(**alert_data)
-            alert.timestamp = datetime.now(UTC)
+            alert.processing_timestamp = datetime.now(UTC)
 
             logger.info(f"Received alert: {alert}")
 

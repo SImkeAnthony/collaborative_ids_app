@@ -33,6 +33,7 @@ class AlertModel(BaseModel):
     ip: Optional[IPvAnyAddress] = None
     reason: str = "N/A"
     timestamp: datetime = datetime.now(UTC)
+    processing_timestamp: Optional[datetime] = datetime.now(UTC)
 
     @field_validator("jail")
     def validate_jail(cls, v):
