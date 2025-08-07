@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from pydantic import IPvAnyAddress
 
@@ -19,7 +19,7 @@ class PublishMsgService:
         self.publisher = publisher
 
     def publish_alert(self, alert: AlertModel):
-        alert.timestamp = datetime.now()
+        alert.timestamp = datetime.now(UTC)
         alert.target_ip = IPvAnyAddress("0.0.0.0") if alert.target_ip is None else alert.target_ip
         payload = alert.to_json()
         self.publisher.publish_alert(alert=payload)

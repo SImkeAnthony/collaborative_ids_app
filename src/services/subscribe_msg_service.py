@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from src.models.alert_model import AlertModel
 from src.fail2ban.fail2ban_client import Fail2banClient
 from src.shared.custom_cache import register_alert
@@ -31,7 +31,7 @@ class SubscribeMsgService:
         try:
             alert_data = json.loads(message)
             alert = AlertModel(**alert_data)
-            alert.timestamp = datetime.now()
+            alert.timestamp = datetime.now(UTC)
 
             logger.info(f"Received alert: {alert}")
 
