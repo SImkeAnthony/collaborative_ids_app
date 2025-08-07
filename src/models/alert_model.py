@@ -20,6 +20,7 @@ class AlertModel(BaseModel):
         ip (str): The IP address to be banned.
         reason (str): The reason for the ban.
         timestamp (datetime): The timestamp of the alert, defaults to current time in UTC.
+        processing_timestamp (Optional[datetime]): The timestamp when the alert was processed, defaults to current time in UTC.
     """
     hostname: Optional[str] = "N/A"
     source_ip: Optional[IPvAnyAddress] = None
@@ -49,7 +50,7 @@ class AlertModel(BaseModel):
         return v
 
     def __str__(self):
-        return f"AlertModel(source_ip={self.source_ip}, target_ip={self.target_ip}, port={self.port}, protocol={self.protocol}, alert_type={self.alert_type}, severity={self.severity}, action={self.action}, jail={self.jail}, ip={self.ip}, reason={self.reason}, timestamp={self.timestamp})"
+        return f"AlertModel(source_ip={self.source_ip}, target_ip={self.target_ip}, port={self.port}, protocol={self.protocol}, alert_type={self.alert_type}, severity={self.severity}, action={self.action}, jail={self.jail}, ip={self.ip}, reason={self.reason}, timestamp={self.timestamp}, processing_timestamp={self.processing_timestamp})"
 
     def __repr__(self):
         return self.__str__()
