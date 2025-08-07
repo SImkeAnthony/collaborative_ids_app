@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import zmq
 import threading
@@ -173,6 +174,7 @@ class ZMQSubscriber(threading.Thread):
                 if topic.decode() == self._topic:
                     alert_received: AlertModel = AlertModel.from_json(json_str=received_msg)
                     alert_received.target_ip = get_local_ip()
+                    alert_received.timestamp = datetime.now()
                     logger.info(f"Received alert: {received_msg}")
                     self._on_message_callback(received_msg)
             except zmq.Again:
